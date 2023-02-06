@@ -14,6 +14,7 @@ class MapParams:
         self.zoom = 16
         self.type = "map"
         self.step = 0.002
+        self.mark = f"&pt={self.ll_cur()},{'pmgnm'}"
 
     def ll(self):
         return str(self.lon) + "," + str(self.lat)
@@ -23,7 +24,7 @@ class MapParams:
 
 
 def load_map(mp):
-    map_request = f"http://static-maps.yandex.ru/1.x/?ll={mp.ll()}&z={mp.zoom}&l={mp.type}&pt={mp.ll_cur()},{'pmgnm'}"
+    map_request = f"http://static-maps.yandex.ru/1.x/?ll={mp.ll()}&z={mp.zoom}&l={mp.type}{mp.mark}"
     response = requests.get(map_request)
     if not response:
         print("Ошибка выполнения запроса:")
@@ -72,6 +73,18 @@ def get_coordinates(address):
     toponym_longitude, toponym_latitude = toponym_coordinates.split()
     return float(toponym_longitude), float(toponym_latitude)
 
+
+def obj_info(address):
+    toponym = geocode(address)
+    if not toponym:
+        return None
+    toponym_address = toponym["metaDataProperty"]["GeocoderMetaData"]["Address"]["formatted"]
+    try:
+        toponym_post_index = \
+            toponym["metaDataProperty"]["GeocoderMetaData"]["AddressDetails"]["Country"]["AdministrativeArea"]["Locality"]["Thoroughfare"]["Premise"]["PostalCode"]["PostalCodeNumber"]
+    except:
+        toponym_post_index = None
+    return toponym_address, toponym_post_index
 
 # def main():
 #     pygame.init()

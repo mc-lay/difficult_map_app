@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QApplication
 from PyQt5.QtGui import QPixmap
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QMainWindow
-from map_working import MapParams, load_map, get_coordinates
+from map_working import MapParams, load_map, get_coordinates, obj_info
 
 
 class MainApp(QMainWindow, MainUi):
@@ -14,10 +14,11 @@ class MainApp(QMainWindow, MainUi):
         super().__init__()
         self.setupUi(self)
 
-        self.setFixedSize(800, 600)
+        self.setFixedSize(800, 800)
 
         self.map_types = ["map", "sat", "sat,skl"]
-
+        self.obj_info_address = "Не найден"
+        self.obj_info_post_idx = "Не найден"
         self.comboBox.addItems(["Схема", "Спутник", "Гибрид"])
 
         self.mp = MapParams()
@@ -31,7 +32,10 @@ class MainApp(QMainWindow, MainUi):
         self.comboBox.setCurrentIndex(0)
         self.comboBox.currentTextChanged.connect(self.change_map_type)
 
-        self.seatch_btn.clicked.connect(self.search_obj)
+        self.search_btn.clicked.connect(self.search_obj)
+        self.clear_btn.clicked.connect(self.clear_map_from_marks)
+
+        self.checkBox.clicked.connect(self.change_text_browser)
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_PageUp and self.mp.zoom < 20:
@@ -65,17 +69,42 @@ class MainApp(QMainWindow, MainUi):
 
     def search_obj(self):
 
-        print("+".join(self.find_obj.text().split()))
-        coords = get_coordinates("+".join(self.find_obj.text().split()))
-        print(coords)
+        # print("+".join(self.find_obj.text().split()))
+        searching_request = "+".join(self.find_obj.text().split())
+        coords = get_coordinates(searching_request)
+        # print(coords)
         self.mp.lon = coords[0]
         self.mp.lat = coords[1]
         self.mp.cur_lon = coords[0]
         self.mp.cur_lat = coords[1]
+
+        self.obj_info_address, self.obj_info_post_idx = obj_info(searching_request)
+        if self.obj_info_post_idx is None:
+            self.obj_info_post_idx = "Не найден"
+        self.textBrowser.setText(f"Информация об объекте:\nАдрес: {self.obj_info_address}\n")
+        if self.checkBox.isChecked():
+            self.textBrowser.append(f"Почтовый индекс: {self.obj_info_post_idx}")
+        self.mp.mark = f"&pt={self.mp.ll_cur()},{'pmgnm'}"
         self.map_file = load_map(self.mp)
         self.pixmap = QPixmap("map.png")
         self.label.setPixmap(self.pixmap)
         self.label.setFocus()
+
+    def clear_map_from_marks(self):
+        self.mp.mark = ""
+        self.map_file = load_map(self.mp)
+        self.pixmap = QPixmap("map.png")
+        self.textBrowser.clear()
+        self.label.setPixmap(self.pixmap)
+        self.label.setFocus()
+
+    def change_text_browser(self):
+        if self.find_obj.text() != "":
+            if self.checkBox.isChecked():
+                self.textBrowser.setText(f"Информация об объекте:\nАдрес: {self.obj_info_address}\n\n"
+                                         f"Почтовый индекс: {self.obj_info_post_idx}")
+            else:
+                self.textBrowser.setText(f"Информация об объекте:\nАдрес: {self.obj_info_address}\n\n")
 
 
 if __name__ == '__main__':
