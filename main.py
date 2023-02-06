@@ -2,12 +2,10 @@ import math
 import sys
 
 from main_design import Ui_MainWindow as MainUi
-from PyQt5.QtWidgets import QMainWindow
-from PyQt5.QtWidgets import (QWidget, QHBoxLayout, QLabel, QApplication)
+from PyQt5.QtWidgets import QApplication
 from PyQt5.QtGui import QPixmap
-from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtWidgets import QMainWindow, QLabel, QGridLayout, QWidget
-from PyQt5.QtCore import QSize
+from PyQt5 import QtCore
+from PyQt5.QtWidgets import QMainWindow
 from map_working import MapParams, load_map, get_coordinates
 
 
